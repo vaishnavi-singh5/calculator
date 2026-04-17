@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #1e1ec9;
+    --accent1: #8ddc0f;
+    --accent2: #fc5c7d;
+    --accent3: #5cf0c4;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: rgb(146, 142, 142);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: rgba(10,10,15,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 2rem;
+    height: 60px;
+    gap: 4px;
+  }
+  .nav-logo {
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: lightpink;
+    margin-right: auto;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--accent1); }
+  .nav-btn {
+    padding: 0.4rem 1rem;
+    border: none; background: transparent;
+    color: lightyellow;
+    font-family: sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    position: relative;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .nav-btn:hover { color: orange; background: rgb(101, 30, 30); }
+  .nav-btn.active { color: var(--text); background: var(--surface2); }
+  .nav-btn.active::after {
+    content: '';
+    position: absolute; bottom: -13px; left: 50%;
+    transform: translateX(-50%);
+    width: 24px; height: 2px;
+    background: var(--accent1);
+    border-radius: 2px;
+  }
+  .nav-tag {
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .tag-str { background: rgba(124,92,252,0.2); color: var(--accent1); }
+  .tag-math { background: rgba(252,92,125,0.2); color: var(--accent2); }
+  .tag-db { background: rgba(92,240,196,0.2); color: var(--accent3); }
+ 
+  .grid-bg {
+    position: fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+ 
+  .page { padding-top: 80px; min-height: 100vh; }
+ 
+  .sec-header { max-width:900px; margin:0 auto 2rem; padding:0 2rem; }
+  .sec-title { font-family:var(--font-head); font-size:1.7rem; font-weight:800; letter-spacing:-0.02em; margin-bottom:0.3rem; color:black; }
+  .sec-sub { color:navy; font-size:0.9rem; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.62rem; margin-bottom:0.8rem; color:white; background-color:black; }
+ 
+  #math .inner { max-width:900px; margin:0 auto; padding:0 2rem 4rem; }
+ 
+  .math-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; }
+  @media(max-width:620px){ .math-grid{ grid-template-columns:1fr; } }
+  .math-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.4rem; }
+  .math-card-title { font-family:var(--font-head); font-size:0.82rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.65rem; }
+  .math-input {
+    flex:1; min-width:70px; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:var(--font-mono); font-size:0.88rem; padding:0.6rem 0.75rem;
+    outline:none; transition:border-color 0.2s;
+  }
+  .math-input:focus { border-color:var(--accent2); }
+  .math-row { display:flex; gap:0.55rem; margin-bottom:0.55rem; flex-wrap:wrap; }
+  .cb { background:linear-gradient(135deg,var(--accent2),#f97316); border:none; border-radius:8px; color:#fff; font-family:var(--font-mono); font-size:0.76rem; padding:0.6rem 0.9rem; cursor:pointer; transition:opacity 0.2s,transform 0.2s; white-space:nowrap; }
+  .cb:hover { opacity:0.85; transform:translateY(-1px); }
+  .math-res { margin-top:0.9rem; padding:0.75rem; background:var(--bg); border-radius:8px; border:1px solid var(--border); font-size:0.88rem; color:var(--accent2); min-height:38px; }
+  .trig-btns { display:flex; flex-wrap:wrap; gap:0.45rem; }
+  .tb { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-mono); font-size:0.73rem; padding:0.5rem 0.75rem; cursor:pointer; transition:all 0.2s; }
+  .tb:hover,.tb.active-t { border-color:var(--accent2); color:var(--accent2); background:rgba(252,92,125,0.1); }
+ 
+  .calculator { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:1.2rem; grid-column:span 2; }
+  @media(max-width:620px){ .calculator{ grid-column:span 1; } }
+  .calc-display { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:1rem; text-align:right; margin-bottom:0.9rem; font-size:1.4rem; color:var(--text); min-height:58px; word-break:break-all; }
+  .calc-display .expr { font-size:0.72rem; color:var(--muted); min-height:18px; }
+  .calc-keys { display:grid; grid-template-columns:repeat(4,1fr); gap:0.45rem; }
+  .ck { background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-mono); font-size:0.92rem; padding:0.75rem; cursor:pointer; transition:all 0.15s; text-align:center; }
+  .ck:hover { background:var(--surface2); transform:scale(0.96); }
+  .ck.op { color:var(--accent2); }
+  .ck.eq { background:linear-gradient(135deg,var(--accent2),#f97316); border-color:transparent; color:#fff; }
+  .ck.fn { color:var(--accent1); font-size:0.72rem; }
+  .ck.clr { color:#ff6b6b; }
+ 
+  .toast { position:fixed; bottom:1.8rem; right:1.8rem; z-index:999; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:0.75rem 1.1rem; font-size:0.78rem; transform:translateY(80px); opacity:0; transition:all 0.3s; max-width:280px; }
+  .toast.show { transform:translateY(0); opacity:1; }
+ 
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+ 
+<div class="grid-bg"></div>
+<div id="toast" class="toast"></div>
+ 
+<nav>
+  <div class="nav-logo">Calculator <span></span></div>
+ 
+
+ 
+</nav>
+ 
+<!-- MATH -->
+<div id="math" class="page">
+  <div class="inner">
+    <div class="sec-header">
+     
+      <div class="sec-sub">Scientific operations and an interactive calculator.</div>
+    </div>
+    <div class="math-grid">
+      <!-- Arithmetic -->
+      <div class="math-card">
+        <div class="math-card-title">Arithmetic</div>
+        <div class="math-row">
+          <input class="math-input" id="arA" type="number" placeholder="A" value="10">
+          <input class="math-input" id="arB" type="number" placeholder="B" value="5">
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-top:0.5rem">
+          <button class="cb" onclick="arith('+')">A + B</button>
+          <button class="cb" onclick="arith('-')">A − B</button>
+          <button class="cb" onclick="arith('*')">A × B</button>
+          <button class="cb" onclick="arith('/')">A ÷ B</button>
+          <button class="cb" onclick="arith('%')">A mod B</button>
+          <button class="cb" onclick="arith('**')">A ^ B</button>
+        </div>
+        <div class="math-res" id="arRes">—</div>
+      </div>
+ 
+      <!-- Trig -->
+      <div class="math-card">
+        <div class="math-card-title">Trigonometry</div>
+        <div class="math-row">
+          <input class="math-input" id="trigX" type="number" placeholder="angle" value="45">
+          <select class="math-input" id="trigUnit" style="max-width:105px">
+            <option value="deg">degrees</option>
+            <option value="rad">radians</option>
+          </select>
+        </div>
+        <div class="trig-btns" style="margin-top:0.6rem">
+          <button class="tb" onclick="trig('sin',this)">sin</button>
+          <button class="tb" onclick="trig('cos',this)">cos</button>
+          <button class="tb" onclick="trig('tan',this)">tan</button>
+        </div>
+        <div class="math-res" id="trigRes">—</div>
+      </div>
+ 
+      <!-- Calculator -->
+      <div class="calculator">
+        <div class="math-card-title">Interactive Calculator</div>
+        <div class="calc-display">
+          <div class="expr" id="calcE"></div>
+          <div id="calcD">0</div>
+        </div>
+        <div class="calc-keys">
+          <button class="ck fn" onclick="ck('Math.sin(')">sin</button>
+          <button class="ck fn" onclick="ck('Math.cos(')">cos</button>
+          <button class="ck fn" onclick="ck('Math.tan(')">tan</button>
+          <button class="ck fn" onclick="ck('Math.sqrt(')">√</button>
+          <button class="ck clr" onclick="cc()">C</button>
+          <button class="ck clr" onclick="cd()">⌫</button>
+          <button class="ck op" onclick="ck('%')">%</button>
+          <button class="ck op" onclick="ck('/')">÷</button>
+          <button class="ck" onclick="ck('7')">7</button>
+          <button class="ck" onclick="ck('8')">8</button>
+          <button class="ck" onclick="ck('9')">9</button>
+          <button class="ck op" onclick="ck('*')">×</button>
+          <button class="ck" onclick="ck('4')">4</button>
+          <button class="ck" onclick="ck('5')">5</button>
+          <button class="ck" onclick="ck('6')">6</button>
+          <button class="ck op" onclick="ck('-')">−</button>
+          <button class="ck" onclick="ck('1')">1</button>
+          <button class="ck" onclick="ck('2')">2</button>
+          <button class="ck" onclick="ck('3')">3</button>
+          <button class="ck op" onclick="ck('+')">+</button>
+          <button class="ck" onclick="ck('0')">0</button>
+          <button class="ck" onclick="ck('.')">.</button>
+          <button class="ck op" onclick="ck('**')">xʸ</button>
+          <button class="ck eq" onclick="ce()">=</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<script>
+function arith(op){
+  const a=parseFloat(document.getElementById('arA').value);
+  const b=parseFloat(document.getElementById('arB').value);
+  const map={'+':a+b,'-':a-b,'*':a*b,'/':b===0?'Division by zero':a/b,'%':a%b,'**':Math.pow(a,b)};
+  const sym={'+':'+','-':'−','*':'×','/':'÷','%':'mod','**':'^'};
+  const r=map[op];
+  document.getElementById('arRes').textContent=`${a} ${sym[op]} ${b} = ${typeof r==='number'?+r.toFixed(8):r}`;
+}
+ 
+function trig(fn,btn){
+  let x=parseFloat(document.getElementById('trigX').value);
+  const unit=document.getElementById('trigUnit').value;
+  const toRad=unit==='deg'?Math.PI/180:1;
+  const inv=['asin','acos','atan'].includes(fn);
+  if(!inv) x*=toRad;
+  const map={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh};
+  let r=map[fn](x);
+  if(inv&&unit==='deg') r=r*180/Math.PI;
+  document.getElementById('trigRes').textContent=`${fn}(${document.getElementById('trigX').value}${unit==='deg'?'°':' rad'}) = ${+r.toFixed(8)}`;
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active-t'));
+  btn.classList.add('active-t');
+}
+ 
+/* Calculator */
+let cExpr='', cNew=true;
+function ck(k){ if(cNew){cExpr='';cNew=false;} cExpr+=k; document.getElementById('calcD').textContent=cExpr.replace(/Math\.sqrt\(/g,'√(').replace(/Math\.sin\(/g,'sin(').replace(/Math\.cos\(/g,'cos(').replace(/Math\.tan\(/g,'tan(').replace(/\*\*/g,'^').replace(/\*/g,'×').replace(/\//g,'÷')||'0'; }
+function cc(){ cExpr=''; document.getElementById('calcD').textContent='0'; document.getElementById('calcE').textContent=''; cNew=true; }
+function cd(){ cExpr=cExpr.slice(0,-1); document.getElementById('calcD').textContent=cExpr||'0'; }
+function ce(){
+  try{
+    const r=Function('"use strict";return ('+cExpr+')')();
+    document.getElementById('calcE').textContent=cExpr.replace(/\*\*/g,'^')+' =';
+    document.getElementById('calcD').textContent=+parseFloat(r).toFixed(10);
+    cExpr=String(r); cNew=true;
+  }catch(e){ document.getElementById('calcD').textContent='Error'; cExpr=''; cNew=true; }
+}
+</script>
+</body>
+</html>
